@@ -9,30 +9,29 @@ Next.js (App Router) + React + TypeScript + Tailwind CSS 3. Páginas: `/` (iníc
 
 Requer Node 18.18+ e internet na primeira execução (as fontes vêm do Google Fonts via next/font).
 
-## Modo de demonstração (padrão)
-Com `AI_MODE=demo`, `/api/chat` usa `src/services/ai/demo.ts`: respostas fixas, marcadas como fictícias na interface.
+## Google Gemini (mecanismo de resposta)
+A rota `/api/chat` chama o Gemini pelo SDK oficial `@google/genai`, somente no servidor. Variáveis (veja `.env.example`):
+- `GEMINI_API_KEY` (obrigatória) — nunca use o prefixo `NEXT_PUBLIC_` e nunca commite `.env.local`.
+- `GEMINI_MODEL` (opcional, padrão `gemini-3.5-flash`) — troque aqui sem alterar código; confira o nome atual em https://ai.google.dev/gemini-api/docs/models.
 
-## Conectar a OpenAI depois
-1. `npm i openai`
-2. Em `.env.local`: `AI_MODE=openai`, `OPENAI_API_KEY=sk-...` (só no servidor; nunca use `NEXT_PUBLIC_`).
-3. Em `src/services/ai/openai.ts`: descomente o código e remova o `throw`.
-4. Ajuste a personalidade em `src/config/newton.ts` (`SYSTEM_PROMPT`).
-5. Limites de uso: ponto marcado em `src/app/api/chat/route.ts`.
+Teste local: coloque a chave em `.env.local` e rode `npm run dev`.
+Erros (limite de uso, indisponibilidade, configuração, resposta bloqueada) viram mensagens em português na conversa; os detalhes técnicos ficam só nos logs do servidor.
 
-Nenhum outro arquivo (nem a interface) precisa mudar. O contexto da conversa já é enviado a cada requisição (últimas 20 mensagens).
+## Publicar novamente na Vercel
+1. `npm install` (atualiza `package-lock.json`) e teste com `npm run dev`.
+2. Na Vercel: *Project → Settings → Environment Variables* → adicione `GEMINI_API_KEY` (Production e Preview; opcionalmente `GEMINI_MODEL`).
+3. Envie as mudanças: `git add . && git commit -m "Integra Gemini" && git push`. A Vercel faz o deploy automaticamente.
+4. Variáveis só valem em deploys novos: se você as criou depois do deploy, use *Deployments → ⋯ → Redeploy*.
+5. Verifique: abra `/api/chat` (deve mostrar `{"available":true}`) e envie uma pergunta em `/conversa`. Sem Git: `npx vercel --prod`.
 
-## Mapa
-- `src/app` — páginas e rota `/api/chat`
-- `src/components` — ChatView, Message, OrbitIllustration
-- `src/services` — `chat-client.ts` (navegador) e `ai/` (servidor: provedores)
-- `src/config/newton.ts` — saudação, sugestões, prompt de sistema
-- `src/types/chat.ts` — tipos e contrato `AIProvider`
+## Trocar de provedor (ex.: OpenAI)
+Implemente `src/services/ai/openai.ts` (há um esqueleto comentado), rode `npm i openai`, defina `AI_PROVIDER=openai` e `OPENAI_API_KEY`. A interface, a rota e o prompt (`src/config/newton.ts`) não mudam. Limites de uso por IP: ponto marcado em `src/app/api/chat/route.ts`.
 
 ## Hospedagem e incorporação no Google Sites
 
 O app precisa de um servidor Node (a rota `/api/chat`), então hospede-o fora do Google Sites, por exemplo na Vercel:
 1. Envie o projeto para um repositório no GitHub.
-2. Na Vercel: *Add New → Project*, importe o repositório e, em *Environment Variables*, defina `AI_MODE=demo` (depois, as variáveis da OpenAI).
+2. Na Vercel: *Add New → Project*, importe o repositório e, em *Environment Variables*, defina `GEMINI_API_KEY`.
 3. Após o deploy, você terá um endereço público em HTTPS, como `https://seu-projeto.vercel.app`. O site continua funcionando de forma independente nesse endereço.
 
 ### Incorporar com "Incorporar por URL"

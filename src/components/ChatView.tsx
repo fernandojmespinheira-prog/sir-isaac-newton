@@ -2,22 +2,22 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { ChatMessage } from "@/types/chat";
-import { fetchMode, sendChat } from "@/services/chat-client";
+import { fetchAvailability, sendChat } from "@/services/chat-client";
 import { GREETING, SUGGESTIONS } from "@/config/newton";
 import { Message } from "./Message";
 
-type Ui = ChatMessage & { demo?: boolean };
+type Ui = ChatMessage;
 
 export default function ChatView() {
   const [messages, setMessages] = useState<Ui[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [demoMode, setDemoMode] = useState(true);
+  const [available, setAvailable] = useState(true);
   const scrollRef = useRef<HTMLElement>(null);
   const areaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => { fetchMode().then((m) => setDemoMode(m === "demo")).catch(() => {}); }, []);
+  useEffect(() => { fetchAvailability().then(setAvailable).catch(() => {}); }, []);
   useEffect(() => { const el = scrollRef.current; el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" }); }, [messages, loading]);
 
   async function send(text: string) {
@@ -27,10 +27,10 @@ export default function ChatView() {
     setMessages(next); setInput(""); setError(""); setLoading(true);
     if (areaRef.current) areaRef.current.style.height = "auto";
     try {
-      const { reply, demo } = await sendChat(next);
-      setMessages([...next, { role: "assistant", content: reply, demo }]);
-    } catch {
-      setError("Não foi possível obter a resposta. Verifique a conexão e envie novamente.");
+      const { reply } = await sendChat(next);
+      setMessages([...next, { role: "assistant", content: reply }]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível obter a resposta. Tente novamente.");
     } finally { setLoading(false); }
   }
 
@@ -43,7 +43,7 @@ export default function ChatView() {
         </div>
         <div className="flex items-center gap-4">
           <span className="hidden items-center gap-2 text-xs text-stone sm:flex">
-            <span aria-hidden className="h-2 w-2 rounded-full bg-gold" />{demoMode ? "Modo de demonstração" : "Disponível"}
+            <span aria-hidden className="h-2 w-2 rounded-full bg-gold" />{available ? "Disponível" : "Indisponível"}
           </span>
           <button onClick={() => { setMessages([]); setError(""); setInput(""); }}
             className="rounded-sm border border-gold px-3 py-1.5 text-sm text-gold-dark transition-colors hover:bg-parchment">Nova conversa</button>
@@ -61,7 +61,7 @@ export default function ChatView() {
               ))}
             </div>
           )}
-          {messages.map((m, i) => <Message key={i} m={m} demo={m.demo} />)}
+          {messages.map((m, i) => <Message key={i} m={m} />)}
           {loading && <p className="ml-11 animate-pulse font-serif italic text-stone">Newton reflete sobre vossa questão…</p>}
           {error && <p role="alert" className="ml-11 text-sm text-red-800">{error}</p>}
         </div>

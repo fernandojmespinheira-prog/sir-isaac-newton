@@ -1,11 +1,11 @@
 import type { AIProvider } from "@/types/chat";
-import { demoProvider } from "./demo";
+import { geminiProvider } from "./gemini";
 import { openaiProvider } from "./openai";
 
-/** Só usa OpenAI se AI_MODE=openai E a chave existir no servidor. */
-export function getMode(): "demo" | "openai" {
-  return process.env.AI_MODE === "openai" && process.env.OPENAI_API_KEY ? "openai" : "demo";
-}
+/** Gemini é o padrão. Para trocar de provedor: AI_PROVIDER=openai (nenhuma mudança na interface). */
 export function getProvider(): AIProvider {
-  return getMode() === "openai" ? openaiProvider : demoProvider;
+  return process.env.AI_PROVIDER === "openai" ? openaiProvider : geminiProvider;
+}
+export function isConfigured(): boolean {
+  return process.env.AI_PROVIDER === "openai" ? !!process.env.OPENAI_API_KEY : !!process.env.GEMINI_API_KEY;
 }
