@@ -1,11 +1,23 @@
 import type { AIProvider } from "@/types/chat";
+import { AIError } from "./errors";
 import { geminiProvider } from "./gemini";
 import { openaiProvider } from "./openai";
 
-/** Gemini é o padrão. Para trocar de provedor: AI_PROVIDER=openai (nenhuma mudança na interface). */
-export function getProvider(): AIProvider {
-  return process.env.AI_PROVIDER === "openai" ? openaiProvider : geminiProvider;
+/** Provedor ativo: AI_PROVIDER (padrão "gemini"). Valor desconhecido é erro explícito: nunca há alternativa silenciosa. */
+function providerName(): "gemini" | "openai" {
+  const name = (process.env.AI_PROVIDER || "gemini").trim().toLowerCase();
+  if (name === "gemini" || name === "openai") return name;
+  throw new AIError("config", `AI_PROVIDER inválido: "${name}"`);
 }
+
+export function getProvider(): AIProvider {
+  return providerName() === "openai" ? openaiProvider : geminiProvider;
+}
+
 export function isConfigured(): boolean {
-  return process.env.AI_PROVIDER === "openai" ? !!process.env.OPENAI_API_KEY : !!process.env.GEMINI_API_KEY;
+  try {
+    return providerName() === "openai" ? !!process.env.OPENAI_API_KEY : !!process.env.GEMINI_API_KEY;
+  } catch {
+    return false;
+  }
 }

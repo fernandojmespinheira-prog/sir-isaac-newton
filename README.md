@@ -10,7 +10,8 @@ Next.js (App Router) + React + TypeScript + Tailwind CSS 3. Páginas: `/` (iníc
 Requer Node 18.18+ e internet na primeira execução (as fontes vêm do Google Fonts via next/font).
 
 ## Atualizando a partir de uma versão anterior
-Copiar o ZIP por cima de um repositório antigo não apaga arquivos removidos. Confirme que **`src/services/ai/demo.ts` não existe mais** (`git rm src/services/ai/demo.ts`); ele pertencia ao modo de demonstração, que foi eliminado, e quebra o build. Rode `npm run typecheck` e `npm run build` antes de enviar.
+Copiar o ZIP por cima de um repositório antigo não apaga arquivos removidos. O antigo `src/services/ai/demo.ts` (modo de demonstração, já eliminado) quebrava o build; nesta versão ele foi substituído por um arquivo vazio e inofensivo, para que a cópia o sobrescreva. Depois de publicar, apague-o: `git rm src/services/ai/demo.ts`. Para conferir o que a Vercel está compilando, veja o commit do deploy no GitHub: `src/services/ai/gemini.ts` deve existir e `demo.ts` não pode conter `demoProvider`.
+Rode `npm run typecheck` e `npm run build` antes de enviar.
 
 ## Google Gemini (mecanismo de resposta)
 A rota `/api/chat` chama o Gemini pelo SDK oficial `@google/genai`, somente no servidor. Variáveis (veja `.env.example`):
